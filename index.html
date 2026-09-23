@@ -144,6 +144,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
 .ept{background:rgba(167,139,250,.16);color:#a78bfa;border:1px solid rgba(167,139,250,.32)}
 .wlink{color:#60a5fa;text-decoration:none;font-weight:500}
 .wlink:hover{text-decoration:underline;color:#93c5fd}
+.bn-chev{display:inline-block;color:#4ade9a;font-size:11px;cursor:pointer;transition:transform .15s;width:10px}
+.bn-main:hover td{background:rgba(255,255,255,.02)}
+.bn-exp{display:grid;grid-template-columns:1fr 120px 1fr;gap:14px;background:#0d1120;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 16px;margin-top:2px}
+.bn-blk .bn-lbl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#4b5563;margin-bottom:4px}
+.bn-blk .bn-txt{font-size:12px;color:#e5e7eb;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .rm{font-size:11px;color:#6b7280;margin-bottom:14px}
 .rstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .rst{background:#0d1120;border-radius:8px;padding:10px 8px;text-align:center}
@@ -788,8 +793,11 @@ function renderBottleneck(){
   const tt=s=>String(s||'').replace(/"/g,'&quot;');
   document.getElementById('bn-tbody').innerHTML=bn.map((r,i)=>{
     const o=r.daysOver,cl=o>50?'dr':o>25?'da':'dg';
-    return '<tr>'+
-      '<td style="color:#4b5563">'+(i+1)+'</td>'+
+    const wu=r.weeklyUpdate||'\u2014', rs=r.reason||'\u2014', dl=r.delay||'\u2014';
+    const truncated=(r.weeklyUpdate&&r.weeklyUpdate.length>40)||(r.reason&&r.reason.length>40);
+    const chev=truncated?'<span class="bn-chev" onclick="toggleBn(event,'+i+')">▸</span>':'';
+    return '<tr class="bn-main" onclick="toggleBn(event,'+i+')" style="'+(truncated?'cursor:pointer':'')+'">'+
+      '<td style="color:#4b5563">'+chev+' '+(i+1)+'</td>'+
       '<td class="tdp" title="'+tt(r.pos)+'">'+r.pos+'</td>'+
       '<td>'+r.recruiter+'</td>'+
       '<td title="'+tt(r.hm)+'">'+r.hm+'</td>'+
@@ -798,11 +806,27 @@ function renderBottleneck(){
       '<td style="font-weight:600">'+r.days+'</td>'+
       '<td><span class="dc '+cl+'">'+o+'</span></td>'+
       '<td style="text-align:center">'+(r.sourced||'\u2014')+'</td>'+
-      '<td style="color:#9ca3af" title="'+tt(r.delay)+'">'+(r.delay||'\u2014')+'</td>'+
-      '<td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="'+tt(r.weeklyUpdate)+'">'+(r.weeklyUpdate||'\u2014')+'</td>'+
-      '<td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="'+tt(r.reason)+'">'+(r.reason||'\u2014')+'</td>'+
-    '</tr>';
+      '<td style="color:#9ca3af;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+tt(r.delay)+'">'+dl+'</td>'+
+      '<td style="color:#cbd5e1;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+tt(r.weeklyUpdate)+'">'+wu+'</td>'+
+      '<td style="color:#cbd5e1;font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+tt(r.reason)+'">'+rs+'</td>'+
+    '</tr>'+
+    '<tr class="bn-detail" id="bn-d'+i+'" style="display:none"><td></td><td colspan="11" style="padding:0 10px 14px">'+
+      '<div class="bn-exp">'+
+        '<div class="bn-blk"><div class="bn-lbl">Weekly update</div><div class="bn-txt">'+wu+'</div></div>'+
+        '<div class="bn-blk"><div class="bn-lbl">Delay</div><div class="bn-txt">'+dl+'</div></div>'+
+        '<div class="bn-blk"><div class="bn-lbl">Reason for delay</div><div class="bn-txt">'+rs+'</div></div>'+
+      '</div>'+
+    '</td></tr>';
   }).join('')||'<tr><td colspan="12" style="text-align:center;color:#4b5563;padding:24px">No roles over SLA \u2014 no bottlenecks right now.</td></tr>';
+}
+function toggleBn(e,i){
+  e.stopPropagation();
+  const d=document.getElementById('bn-d'+i);
+  if(!d)return;
+  const open=d.style.display!=='none';
+  d.style.display=open?'none':'table-row';
+  const chev=d.previousElementSibling&&d.previousElementSibling.querySelector('.bn-chev');
+  if(chev)chev.textContent=open?'▸':'▾';
 }
 
 
