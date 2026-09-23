@@ -77,7 +77,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
 .spinner{width:32px;height:32px;border:2px solid rgba(255,255,255,.08);border-top-color:#4ade9a;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .err-box{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:16px 20px;color:#f87171;font-size:13px;margin:20px}
-.metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+.metrics{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:20px}
 .mc{background:#111827;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
 .mc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:12px 12px 0 0}
 .mc.bl::before{background:#60a5fa}.mc.rd::before{background:#f87171}
@@ -142,6 +142,8 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
 .etag{position:absolute;top:14px;right:16px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:8px}
 .eft{background:rgba(96,165,250,.14);color:#60a5fa;border:1px solid rgba(96,165,250,.3)}
 .ept{background:rgba(167,139,250,.16);color:#a78bfa;border:1px solid rgba(167,139,250,.32)}
+.wlink{color:#60a5fa;text-decoration:none;font-weight:500}
+.wlink:hover{text-decoration:underline;color:#93c5fd}
 .rm{font-size:11px;color:#6b7280;margin-bottom:14px}
 .rstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .rst{background:#0d1120;border-radius:8px;padding:10px 8px;text-align:center}
@@ -181,6 +183,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
     <div class="nav-item" id="nav-monday" onclick="goPage('monday',this)">
       <div class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
       <span class="nav-label">Monday Review</span>
+    </div>
+    <div class="nav-item" id="nav-bottleneck" onclick="goPage('bottleneck',this)">
+      <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 4h18M6 4v6l4 4v6M18 4v6l-4 4"/></svg></div>
+      <span class="nav-label">Bottleneck</span>
+      <span class="nav-badge" id="bn-badge">—</span>
     </div>
   </nav>
   <div class="sb-filters">
@@ -276,7 +283,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
         <div class="card"><h3>Pipeline health table</h3>
           <div class="rz-hint">↔ Drag the edge of a column header to resize · double-click the edge to fit content · hover a cell to see full text</div>
           <div class="twrap"><table class="tbl rsz" id="p-table">
-            <thead><tr><th style="width:36px">#</th><th style="width:210px">Position</th><th style="width:80px">Company</th><th style="width:85px">Recruiter</th><th style="width:190px">Stage</th><th style="width:110px">Last update</th><th style="width:75px">Days open</th><th style="width:52px">SLA</th><th style="width:75px">Over SLA</th><th style="width:200px">Weekly update</th><th style="width:90px">HM</th><th style="width:90px">Role type</th><th style="width:95px">Budget AED</th><th style="width:110px">Category</th><th style="width:110px">Action</th></tr></thead>
+            <thead><tr><th style="width:36px">#</th><th style="width:210px">Position</th><th style="width:80px">Company</th><th style="width:85px">Recruiter</th><th style="width:190px">Stage</th><th style="width:110px">Last update</th><th style="width:75px">Days open</th><th style="width:52px">SLA</th><th style="width:75px">Over SLA</th><th style="width:200px">Weekly update</th><th style="width:90px">HM</th><th style="width:90px">Role type</th><th style="width:95px">Budget AED</th><th style="width:110px">Category</th><th style="width:75px">Sourced</th><th style="width:90px">Shortlist</th><th style="width:110px">Action</th></tr></thead>
             <tbody id="p-tbody"></tbody>
           </table></div>
         </div>
@@ -311,6 +318,30 @@ body{font-family:'Inter',system-ui,sans-serif;background:#0a0e1a;color:#e8eaf0;f
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
           <div class="card"><h3>Closed by role type</h3><div class="cw" style="height:220px"><canvas id="cCRT"></canvas></div></div>
           <div class="card"><h3>Opened vs closed by month</h3><div class="cw" style="height:220px"><canvas id="cOvC"></canvas></div></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-bottleneck">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px" id="bn-metrics"></div>
+        <div class="card"><h3>Bottleneck — roles over SLA</h3>
+          <div class="rz-hint">Roles past their SLA, ranked by days over. Hover any cell for full text.</div>
+          <div class="twrap"><table class="tbl rsz" id="bn-table">
+            <thead><tr>
+              <th style="width:36px">#</th>
+              <th style="width:210px">Position</th>
+              <th style="width:85px">Recruiter</th>
+              <th style="width:90px">HM</th>
+              <th style="width:110px">Open date</th>
+              <th style="width:52px">SLA</th>
+              <th style="width:75px">Days open</th>
+              <th style="width:85px">Days over SLA</th>
+              <th style="width:80px">Sourced</th>
+              <th style="width:90px">Delay</th>
+              <th style="width:180px">Weekly update</th>
+              <th style="width:240px">Reason for delay</th>
+            </tr></thead>
+            <tbody id="bn-tbody"></tbody>
+          </table></div>
         </div>
       </div>
 
@@ -465,6 +496,22 @@ function parseRow(r){
     stage:String(F('STAGE')||'').trim(),
     roleStatus:String(F('Role Status')||'').trim(),
     weeklyUpdate:String(F('Weekly update')||'').trim(),
+    weeklyUrl:(function(){
+      // 'shortlist' column holds the full URL. Try by name, then column AD (idx 29),
+      // then scan any cell that is a URL as a last resort.
+      let u=String(F('shortlist')||F('Shortlist')||F('short list')||'').trim();
+      if(!/^https?:\/\//i.test(u)){
+        const vals=Object.values(r);
+        if(vals.length>29&&vals[29]!=null&&/^https?:\/\//i.test(String(vals[29]).trim())) u=String(vals[29]).trim();
+      }
+      if(!/^https?:\/\//i.test(u)){
+        for(const k in r){const v=String(r[k]||'').trim();if(/^https?:\/\/\S+$/i.test(v)){u=v;break;}}
+      }
+      return /^https?:\/\//i.test(u)?u:'';
+    })(),
+    sourced:String(F('Sourced')||F('Sourced number')||F('Sourced Number')||F('Sourced #')||F('No of Sourced')||F('Number Sourced')||F('Candidates Sourced')||'').trim(),
+    delay:String(F('Delay')||'').trim(),
+    reason:String(F('Reason')||'').trim(),
     budget:parseInt(String(r.Budget_AED||'').replace(/[^0-9]/g,''))||0,
     cat:String(r['Budget category']||r.Budget_category||'').trim(),
     hm:String(r.Hiring_Manager||'').trim(),
@@ -492,6 +539,7 @@ async function loadData(){
     const json=await res.json();
     if(json&&json.error) throw new Error(json.error);
     if(!Array.isArray(json)||!json.length) throw new Error(KEY?'No roles found for your access key yet.':'No data returned');
+    window.__RAWJSON=json;
     RAW=json.map(parseRow).filter(r=>r.pos);
     const recs=[...new Set(RAW.map(r=>r.recruiter).filter(r=>r&&r!=='Other'))].sort();
     setOpts('gRecruiter','All recruiters',recs);
@@ -538,6 +586,7 @@ function renderAll(){
   renderPipeline();
   renderCapacity();
   renderMonday();
+  renderBottleneck();
   document.getElementById('sla-badge').textContent=gd().filter(r=>r.status==='Open'&&r.daysOver>0).length;
 }
 
@@ -549,6 +598,7 @@ function renderOverview(){
   const paused=d.filter(r=>r.status==='Paused');
   const overSla=open.filter(r=>r.daysOver>0);
   const avgC=closed.length?Math.round(closed.reduce((s,r)=>s+r.days,0)/closed.length):0;
+  const avgOpen=open.length?Math.round(open.reduce((s,r)=>s+r.days,0)/open.length):0;
   const rate=d.length?Math.round(closed.length/d.length*100):0;
   const{from,to,label:dateLabel}=getDateRange();
 
@@ -565,6 +615,7 @@ function renderOverview(){
     <div class="mc gn"><div class="mc-lbl">Total closed · ${dateLabel}</div><div class="mc-val ok">${closed.length}</div><div class="mc-sub">Avg ${avgC}d to fill</div></div>
     <div class="mc rd"><div class="mc-lbl">Roles over SLA</div><div class="mc-val warn">${overSla.length}</div><div class="mc-sub">${open.length?Math.round(overSla.length/open.length*100):0}% of active</div></div>
     <div class="mc am"><div class="mc-lbl">Avg days to close</div><div class="mc-val">${avgC}</div><div class="mc-sub">Target: 45 days</div></div>
+    <div class="mc bl"><div class="mc-lbl">Avg time open</div><div class="mc-val">${avgOpen}</div><div class="mc-sub">Active roles · live</div></div>
     <div class="mc pu"><div class="mc-lbl">Paused / on hold</div><div class="mc-val">${paused.length}</div><div class="mc-sub">${rate}% closing rate</div></div>`;
 
   const types=['Full Time','Fractional','Advisor','Freelancer'];
@@ -642,7 +693,7 @@ function renderPipeline(){
   document.getElementById('p-tbody').innerHTML=d.map((r,i)=>{
     const o=r.daysOver,cl=o>30?'dr':o>0?'da':'dg';
     const tt=s=>String(s||'').replace(/"/g,'&quot;');
-    return`<tr><td style="color:#4b5563">${i+1}</td><td class="tdp" title="${tt(r.pos)}">${r.pos}</td><td title="${tt(r.company)}">${r.company}</td><td>${r.recruiter}</td><td style="color:#9ca3af" title="${tt(r.stage)}">${r.stage}</td><td style="color:#9ca3af;font-size:11px" title="${tt(r.lastUpdate)}">${r.lastUpdate||'—'}</td><td style="font-weight:600">${r.days}</td><td style="color:#6b7280">${r.sla}</td><td><span class="dc ${cl}">${o}</span></td><td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="${tt(r.weeklyUpdate)}">${r.weeklyUpdate||'—'}</td><td title="${tt(r.hm)}">${r.hm}</td><td>${r.roleType}</td><td style="color:#9ca3af">${r.budget?r.budget.toLocaleString():'—'}</td><td style="font-size:11px;color:#6b7280" title="${tt(r.cat)}">${r.cat}</td><td>${o>0?`<button class="esc-btn" onclick="escalate('${tt(r.pos).replace(/'/g,"\\'")}',${r.days},${o})">⚡ Escalate</button>`:''}</td></tr>`;
+    return`<tr><td style="color:#4b5563">${i+1}</td><td class="tdp" title="${tt(r.pos)}">${r.pos}</td><td title="${tt(r.company)}">${r.company}</td><td>${r.recruiter}</td><td style="color:#9ca3af" title="${tt(r.stage)}">${r.stage}</td><td style="color:#9ca3af;font-size:11px" title="${tt(r.lastUpdate)}">${r.lastUpdate||'—'}</td><td style="font-weight:600">${r.days}</td><td style="color:#6b7280">${r.sla}</td><td><span class="dc ${cl}">${o}</span></td><td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="${tt(r.weeklyUpdate)}">${r.weeklyUpdate||'—'}</td><td title="${tt(r.hm)}">${r.hm}</td><td>${r.roleType}</td><td style="color:#9ca3af">${r.budget?r.budget.toLocaleString():'—'}</td><td style="font-size:11px;color:#6b7280" title="${tt(r.cat)}">${r.cat}</td><td style="text-align:center">${r.sourced||'—'}</td><td>${r.weeklyUrl?`<a href="${r.weeklyUrl}" target="_blank" rel="noopener" class="wlink">🔗 Open</a>`:'—'}</td><td>${o>0?`<button class="esc-btn" onclick="escalate('${tt(r.pos).replace(/'/g,"\\'")}',${r.days},${o})">⚡ Escalate</button>`:''}</td></tr>`;
   }).join('');
 }
 
@@ -660,8 +711,14 @@ function renderCapacity(){
     }
     return false;
   };
-  const recSet=[...new Set(d.map(r=>r.recruiter).filter(r=>r&&r!=='Other'))].sort();
+  const recSetAll=[...new Set(d.map(r=>r.recruiter).filter(r=>r&&r!=='Other'))].sort();
   const activeSet=new Set(d.filter(isActive).map(r=>r.recruiter));
+  const dateWindowActive=!!(from||to);
+  // Under a date window, show only recruiters with real activity in it (data-driven).
+  // Under All time, show everyone. KNOWN_INACTIVE no longer hides — it only sets the red tag.
+  const recSet=dateWindowActive
+    ? recSetAll.filter(r=>activeSet.has(r))
+    : recSetAll;
   const cols=['#60a5fa','#4ade9a','#a78bfa','#fbbf24','#f87171','#2dd4bf'];
   document.getElementById('r-cards').innerHTML=recSet.map((r,i)=>{
     const all=d.filter(x=>x.recruiter===r),op=all.filter(x=>x.status==='Open'),cl=all.filter(x=>x.status==='Closed'),ov=op.filter(x=>x.daysOver>0),c=cols[i%cols.length];
@@ -713,13 +770,49 @@ function renderMonday(){
   mk('cOvC',{type:'bar',data:{labels:mLabels,datasets:[{label:'Closed',data:mC,backgroundColor:'#ec4899',borderRadius:4,borderSkipped:false},{label:'Paused',data:mP,backgroundColor:'#0e7490',borderRadius:4,borderSkipped:false},{label:'Opened',data:mO,backgroundColor:'#38bdf8',borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},color:'#9ca3af',usePointStyle:true,pointStyle:'rect'}}},scales:{x:{grid:{display:false},ticks:GG.ticks},y:{grid:GG.grid,ticks:GG.ticks}}}});
 }
 
+/* BOTTLENECK */
+function renderBottleneck(){
+  const d=gd();
+  const bn=d.filter(r=>r.status==='Open'&&r.daysOver>0).sort((a,b)=>b.daysOver-a.daysOver);
+  const badge=document.getElementById('bn-badge');
+  if(badge) badge.textContent=bn.length;
+  const fmtDate=(s)=>{if(!s)return '\u2014';const dt=new Date(s);return isNaN(dt)?s:dt.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});};
+  const avgOver=bn.length?Math.round(bn.reduce((s,r)=>s+r.daysOver,0)/bn.length):0;
+  const worst=bn.length?bn[0].daysOver:0;
+  const noSourced=bn.filter(r=>!r.sourced||r.sourced==='0').length;
+  document.getElementById('bn-metrics').innerHTML=
+    '<div class="mc rd"><div class="mc-lbl">Roles over SLA</div><div class="mc-val warn">'+bn.length+'</div><div class="mc-sub">Open & past SLA</div></div>'+
+    '<div class="mc am"><div class="mc-lbl">Avg days over SLA</div><div class="mc-val">'+avgOver+'</div><div class="mc-sub">Across bottlenecks</div></div>'+
+    '<div class="mc rd"><div class="mc-lbl">Worst offender</div><div class="mc-val warn">'+worst+'</div><div class="mc-sub">Days over SLA</div></div>'+
+    '<div class="mc pu"><div class="mc-lbl">No candidates sourced</div><div class="mc-val">'+noSourced+'</div><div class="mc-sub">Of '+bn.length+' stuck roles</div></div>';
+  const tt=s=>String(s||'').replace(/"/g,'&quot;');
+  document.getElementById('bn-tbody').innerHTML=bn.map((r,i)=>{
+    const o=r.daysOver,cl=o>50?'dr':o>25?'da':'dg';
+    return '<tr>'+
+      '<td style="color:#4b5563">'+(i+1)+'</td>'+
+      '<td class="tdp" title="'+tt(r.pos)+'">'+r.pos+'</td>'+
+      '<td>'+r.recruiter+'</td>'+
+      '<td title="'+tt(r.hm)+'">'+r.hm+'</td>'+
+      '<td style="color:#9ca3af;font-size:11px">'+fmtDate(r.openDate)+'</td>'+
+      '<td style="color:#6b7280">'+r.sla+'</td>'+
+      '<td style="font-weight:600">'+r.days+'</td>'+
+      '<td><span class="dc '+cl+'">'+o+'</span></td>'+
+      '<td style="text-align:center">'+(r.sourced||'\u2014')+'</td>'+
+      '<td style="color:#9ca3af" title="'+tt(r.delay)+'">'+(r.delay||'\u2014')+'</td>'+
+      '<td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="'+tt(r.weeklyUpdate)+'">'+(r.weeklyUpdate||'\u2014')+'</td>'+
+      '<td style="color:#cbd5e1;font-size:11px;line-height:1.4" title="'+tt(r.reason)+'">'+(r.reason||'\u2014')+'</td>'+
+    '</tr>';
+  }).join('')||'<tr><td colspan="12" style="text-align:center;color:#4b5563;padding:24px">No roles over SLA \u2014 no bottlenecks right now.</td></tr>';
+}
+
+
 /* ══ NAV ══ */
 function goPage(n,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+n).classList.add('active');
   el.classList.add('active');
-  document.getElementById('tb-title').textContent={overview:'Top Level Overview',pipeline:'Pipeline Health',capacity:'Team Capacity',monday:'Monday Review'}[n];
+  document.getElementById('tb-title').textContent={overview:'Top Level Overview',pipeline:'Pipeline Health',capacity:'Team Capacity',monday:'Monday Review',bottleneck:'Bottleneck'}[n];
   setTimeout(()=>Object.values(CI).forEach(c=>{try{c.resize()}catch(e){}}),50);
 }
 function setOv(el,v){document.querySelectorAll('#ov-chips .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');PF.ov=v;renderPipeline();}
@@ -728,6 +821,24 @@ document.getElementById('pRoleType').addEventListener('change',function(){PF.rol
 document.getElementById('pCat').addEventListener('change',function(){PF.cat=this.value;renderPipeline();});
 
 /* ══ COLUMN RESIZE ══ */
+function debugShortlist(){
+  const j=window.__RAWJSON;
+  if(!j||!j.length){alert('No data loaded yet.');return;}
+  const headers=Object.keys(j[0]);
+  const hasShortlist=headers.filter(h=>h.trim().toLowerCase()==='shortlist');
+  let msg='COLUMNS RECEIVED FROM API ('+headers.length+'):\n'+headers.map((h,i)=>i+': "'+h+'"').join('\n');
+  msg+='\n\n--- shortlist check ---\n';
+  if(hasShortlist.length){
+    msg+='Found header: '+hasShortlist.map(h=>'"'+h+'"').join(', ')+'\n\nFirst 5 values:\n';
+    msg+=j.slice(0,5).map((r,i)=>i+': '+JSON.stringify(r[hasShortlist[0]])).join('\n');
+  }else{
+    msg+='❌ No "shortlist" column in the API response.\nThe sheet column exists but the API is not returning it (likely cache — redeploy the Apps Script, or wait 5 min).';
+  }
+  console.log(msg);
+  alert(msg);
+}
+window.debugShortlist=debugShortlist;
+
 function initColResize(){
   const table=document.getElementById('p-table');
   if(!table||table.dataset.rz) return;
@@ -775,6 +886,7 @@ function applyLockMode(){
   // HMs only need Top Level + Pipeline Health
   document.getElementById('nav-capacity').style.display='none';
   document.getElementById('nav-monday').style.display='none';
+  var nbn=document.getElementById('nav-bottleneck');if(nbn)nbn.style.display='none';
   const parts=[];
   if(GF.hm!=='All') parts.push('Hiring manager: '+GF.hm);
   if(GF.dept!=='All') parts.push('Department: '+GF.dept);
